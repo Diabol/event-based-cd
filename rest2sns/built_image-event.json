@@ -1,0 +1,6 @@
+{
+  "status": "ok",
+  "source": "https://github.com/Diabol/event-based-cd-example",
+  "source_revision": "b031598800f95a9f1b5d17a2610b9a25ecb7be7c",
+  "image": "944159926332.dkr.ecr.eu-west-1.amazonaws.com/event-based-cd-example:latest"
+}
