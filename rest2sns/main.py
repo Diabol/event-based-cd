@@ -1,7 +1,6 @@
 
 from flask import Flask
 from flask import request
-import pprint
 import json
 import subprocess
 
@@ -12,16 +11,17 @@ app = Flask(__name__)
 def hello():
     return "Event Based CD Engine - Adaptors"
 
-@app.route("/deploy_test", methods=['POST'])
-def deploy_test():
-    pprint.pprint(request.data)
+@app.route("/notifications", methods=['POST'])
+def notifications():
     jdata = json.loads(request.data)
-    if jdata['Subject'] == 'build_image':
-        msg = json.loads(jdata['Message'])
+    msg = json.loads(jdata['Message'])
+
+    if jdata['Subject'] == 'built_image':
         if msg['status'] == "ok":
             deploy_and_test(msg['image'])
-
         return "OK"
+    elif jdata['Subject'] == "verified_test":
+        pass
 
     return ""
 
@@ -41,4 +41,3 @@ def deploy_and_test(image):
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
-
