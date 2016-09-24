@@ -9,10 +9,8 @@ SCHEDULER.every '3s' do
   entries = streamJson['entries']
   #print "entries: #{entries}\n"
   
-  # TODO
-  #lastest_rev = entries[0].json['source_revision'][0..6]
-  
   events = Array.new
+  latest_rev = ''
   entries.each { |entry|
     id = entry['id'].sub(/:2113/, '')
     #print "id: #{id}\n"
@@ -25,11 +23,31 @@ SCHEDULER.every '3s' do
     rev = json['source_revision'][0..6]
     image = json['image'][/.*\/(.*:.*)/, 1]
     image = '' if image.nil?
+    event = json['event']
+    status = json['status']
     events.push( {
-      label: json['event'] + ': ' + source + ' ' + rev + ' ' + image,
-      value: json['status'] + ': ' + json['msg'] + ' ' + json['link'] + ' ' + json['date']
+      label: event + ': ' + source + ' ' + rev + ' ' + image,
+      value: status + ': ' + json['msg'] + ' ' + json['link'] + ' ' + json['date']
     } )
+      if entries[0] == entry then
+        latest_rev = json['source_revision'][0..6]
+        send_event('pl-build', {})
+        send_event('pl-stage', { })
+        send_event('pl-prod', { })
+      end
+      if rev == latest_rev then
+        if event == 'built_image' then
+          send_event('pl-build', { criticals: status == 'ok' ? 0 : 1, warnings: 0 })
+        end
+        if event == 'verified_test' then
+          send_event('pl-stage', { criticals: status == 'ok' ? 0 : 1, warnings: 0 })
+        end
+        if event == 'verified_prod' then
+          send_event('pl-prod', { criticals: status == 'ok' ? 0 : 1, warnings: 0 })
+        end
+      end
   }
   #print "#{events}\n"
   send_event('cd_list', { items: events })
+  send_event('hash', { text: latest_rev })
 end
