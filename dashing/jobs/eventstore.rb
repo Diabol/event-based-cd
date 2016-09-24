@@ -30,7 +30,7 @@ SCHEDULER.every '4s' do
     status = json['status']
     events.push( {
       label: event + ': ' + source + ' ' + rev + ' ' + image,
-      value: status + ': ' + json['msg'] + ' <a href="' + json['link'] + '">link</a> ' + json['date']
+      value: status + ': ' + json['msg'] + ' ' + json['link'] + ' ' + json['date']
     } )
     if entries[0] == entry then
       latest_rev = json['source_revision'][0..6]
