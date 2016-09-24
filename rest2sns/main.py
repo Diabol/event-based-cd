@@ -25,17 +25,19 @@ def notifications():
     #pprint.pprint(msg) 
     if jdata.has_key('Subject'):
         if jdata['Subject'] == 'built_image':
-            print 'Received built_image event.'
+            print '\n########Received built_image event.\n'
             if msg['status'] == "ok":
                 deploy_and_test(msg['image'], msg['source'], msg['source_revision'])
             return "OK"
         elif jdata['Subject'] == "verified_test":
-            print 'Received verified_test event'
+            print '\n#######Received verified_test event\n'
             if msg['status'] == "ok":
                 deploy_prod(msg['image'], msg['source'], msg['source_revision'])
             return "OK"
     try:
         if jdata['MessageAttributes']['X-Github-Event']['Value'] == 'push':
+	    print '\n#######Received git push event'
+	    print '#######Building docker image\n'
 	    source = msg['repository']['url']
             name = msg['repository']['name']
 	    source_revision = msg['after']
@@ -58,13 +60,13 @@ def build(source, name,  source_revision):
 
 
 def deploy_and_test(image, src, rev):
-    print 'deploying to test'
+    print '#######deploying to test'
     stop_remove_container('test')
 
     if deploy_container('test', image, rev) == 0:
         verified_test_msg = create_msg('ok', image, src, rev)
         sns_client.publish(TopicArn=sns_topic_arn, Subject='verified_test', MessageStructure='string', Message=json.dumps(verified_test_msg))
-        print "Test OK"
+        print "#######Test OK"
         print "Sending verified_test event"
     else:
         print "Test Fail"
@@ -73,10 +75,10 @@ def deploy_and_test(image, src, rev):
 
 def deploy_prod(image, src, rev):
     env = 'prod'
-    print 'deploying to '+env
+    print '#######deploying to '+env
     stop_remove_container(env)
     if deploy_container(env, image, rev) == 0:
-        print 'Prod OK'
+        print '#######Prod OK'
         verified_prod_msg = create_msg('ok', image, src, rev)
         sns_client.publish(TopicArn=sns_topic_arn, Subject='verified_prod', MessageStructure='string', Message=json.dumps(verified_prod_msg))
     else:
@@ -84,6 +86,7 @@ def deploy_prod(image, src, rev):
 
 
 def stop_remove_container(env):
+    time.sleep(10)
     name = 'event-based-cd-example-' + env.lower()
     print 'stoping and removing ' + name
     subprocess.call(["docker", "stop", name])
@@ -92,7 +95,6 @@ def stop_remove_container(env):
 
 
 def deploy_container(env, image, rev):
-    time.sleep(10)
     print 'pulling latest image'
     subprocess.call(["docker", "pull", image])
     if env.lower() == 'prod':
