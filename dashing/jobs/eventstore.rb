@@ -15,8 +15,12 @@ SCHEDULER.every '3s' do
     response = RestClient.get(id, headers={Accept: "application/json"})
     #print "response #{id}: #{response}\n"
     json = JSON.parse(response)
+    json.default('')
     #print "json: #{id}: #{json}\n"
-    events.push( { label: json['event'], value: json['status'] + ' - ' + json['date'] } )
+    events.push( {
+      label: json['event'] + ' - ' + json['source'] + ' ' + json['source_revision'] + ' ' + json['image'],
+      value: json['status'] + ' - ' + json['msg'] + ' ' + json['link'] + ' ' + json['date']
+    } )
   }
   #print "#{events}\n"
   send_event('cd_list', { items: events })
