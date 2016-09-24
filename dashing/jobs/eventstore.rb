@@ -21,7 +21,7 @@ SCHEDULER.every '3s' do
     json = JSON.parse(response)
     json.default  = ''
     #print "json: #{id}: #{json}\n"
-    source = json['source'].sub(/http:\/\/github.com/, '')
+    source = json['source'].sub(/https?:\/\/github.com\//, '')
     rev = json['source_revision'][0..6]
     image = json['image'][/.*\/(.*:.*)/, 1]
     image = '' if image.nil?
@@ -29,7 +29,6 @@ SCHEDULER.every '3s' do
       label: json['event'] + ': ' + source + ' ' + rev + ' ' + image,
       value: json['status'] + ': ' + json['msg'] + ' ' + json['link'] + ' ' + json['date']
     } )
-    
   }
   #print "#{events}\n"
   send_event('cd_list', { items: events })
