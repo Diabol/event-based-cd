@@ -5,6 +5,7 @@ import subprocess
 import boto3
 import pprint
 import datetime
+import time
 
 sns_topic_arn = 'arn:aws:sns:eu-west-1:944159926332:cdevent'
 sns_client = boto3.client('sns')
@@ -60,7 +61,7 @@ def deploy_and_test(image, src, rev):
     print 'deploying to test'
     stop_remove_container('test')
 
-    if deploy_container('test', image) == 0:
+    if deploy_container('test', image, rev) == 0:
         verified_test_msg = create_msg('ok', image, src, rev)
         sns_client.publish(TopicArn=sns_topic_arn, Subject='verified_test', MessageStructure='string', Message=json.dumps(verified_test_msg))
         print "Test OK"
@@ -74,7 +75,7 @@ def deploy_prod(image, src, rev):
     env = 'prod'
     print 'deploying to '+env
     stop_remove_container(env)
-    if deploy_container(env, image) == 0:
+    if deploy_container(env, image, rev) == 0:
         print 'Prod OK'
         verified_prod_msg = create_msg('ok', image, src, rev)
         sns_client.publish(TopicArn=sns_topic_arn, Subject='verified_prod', MessageStructure='string', Message=json.dumps(verified_prod_msg))
@@ -90,7 +91,8 @@ def stop_remove_container(env):
     print 'stopped and removed ' + name
 
 
-def deploy_container(env, image):
+def deploy_container(env, image, rev):
+    time.sleep(10)
     print 'pulling latest image'
     subprocess.call(["docker", "pull", image])
     if env.lower() == 'prod':
@@ -99,7 +101,12 @@ def deploy_container(env, image):
         port = '8080'
     print 'Start container for env: ' + env
     deployed_time = str(datetime.datetime.now())
-    return subprocess.call(["docker", "run", "-d", "-p", port + ":5000", "--name", "event-based-cd-example-"+env.lower(), "-e", "ENV="+env, "-e", "DEPLOYED_TIME=UTC "+deployed_time,  image])
+    return subprocess.call(["docker", "run", "-d", "-p", port + ":5000", 
+	"--name", "event-based-cd-example-"+env.lower(), 
+	"-e", "ENV="+env, 
+	"-e", "DEPLOYED_TIME=UTC " + deployed_time,
+	"-e", "DEPLOYED_REVISION=" + rev,
+	image])
 
 
 def create_msg(status, image, src, rev):
