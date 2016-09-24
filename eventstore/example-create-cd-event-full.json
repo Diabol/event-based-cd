@@ -1,0 +1,16 @@
+[
+  {
+    "eventId": "cde3a1a1-b4a3-4dfe-a01f-ec52c34e16e4",
+    "eventType": "event-cd",
+    "data": {
+      "status": "fail",
+      "source": "https://github.com/Diabol/event-based-cd-example",
+      "source_revision": "b031598800f95a9f1b5d17a2610b9a25ecb7be7c",
+      "image": "944159926332.dkr.ecr.eu-west-1.amazonaws.com/event-based-cd-example:latest",
+      "event": "Build",
+      "msg": "Step x failed: bad credentials",
+      "link": "http://jenkins.mycompany.com/job/myjob/build/123",
+      "date": "Fri, 28 Jun 2013 12:17:59 GMT"
+    }
+  }
+]

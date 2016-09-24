@@ -1,0 +1,11 @@
+[
+  {
+    "eventId": "abc4a1a1-b4a3-4dfe-a01f-ec52c34e16e4",
+    "eventType": "event-cd",
+    "data": {
+      "status": "fail",
+      "event": "deploy",
+      "date": "Fri, 28 Jun 2013 12:17:59 GMT"
+    }
+  }
+]
