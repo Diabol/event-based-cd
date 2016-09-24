@@ -1,0 +1,9 @@
+#!/bin/bash
+
+PID=$(cat adapter.pid)
+
+kill ${PID}
+
+>adapter.pid
+
+echo "Adapter stopped"

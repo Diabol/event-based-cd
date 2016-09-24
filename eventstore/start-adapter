@@ -1,0 +1,6 @@
+#!/bin/bash
+
+python adapter.py > adapter.log 2>&1 &
+echo $! > adapter.pid
+
+echo "Started adapter"
