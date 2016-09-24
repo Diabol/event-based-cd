@@ -20,16 +20,19 @@ def notifications():
     msg = json.loads(jdata['Message'])
 
     if jdata['Subject'] == 'built_image':
+        print 'Received built_image event.'
         if msg['status'] == "ok":
             deploy_and_test(msg['image'], msg['source'], msg['source_revision'])
         return "OK"
     elif jdata['Subject'] == "verified_test":
-        print 'deploying to prod'
+        print 'Received verified_test event'
         if msg['status'] == "ok":
             deploy_prod(msg['image'], msg['source'], msg['source_revision'])
         return "OK"
 
-    return ""
+    print 'Received event, no handling rules. Message data is: \n' + request.data
+
+    return "OK"
 
 
 def deploy_and_test(image, src, rev):
