@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 set -e
 repo=$1
 name=$2

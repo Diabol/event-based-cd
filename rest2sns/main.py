@@ -3,6 +3,8 @@ from flask import request
 import json
 import subprocess
 import boto3
+import pprint
+import datetime
 
 sns_topic_arn = 'arn:aws:sns:eu-west-1:944159926332:cdevent'
 sns_client = boto3.client('sns')
@@ -16,23 +18,42 @@ def hello():
 
 @app.route("/notifications", methods=['POST'])
 def notifications():
+    #print request.data
     jdata = json.loads(request.data)
     msg = json.loads(jdata['Message'])
-
-    if jdata['Subject'] == 'built_image':
-        print 'Received built_image event.'
-        if msg['status'] == "ok":
-            deploy_and_test(msg['image'], msg['source'], msg['source_revision'])
-        return "OK"
-    elif jdata['Subject'] == "verified_test":
-        print 'Received verified_test event'
-        if msg['status'] == "ok":
-            deploy_prod(msg['image'], msg['source'], msg['source_revision'])
-        return "OK"
+    #pprint.pprint(msg) 
+    if jdata.has_key('Subject'):
+        if jdata['Subject'] == 'built_image':
+            print 'Received built_image event.'
+            if msg['status'] == "ok":
+                deploy_and_test(msg['image'], msg['source'], msg['source_revision'])
+            return "OK"
+        elif jdata['Subject'] == "verified_test":
+            print 'Received verified_test event'
+            if msg['status'] == "ok":
+                deploy_prod(msg['image'], msg['source'], msg['source_revision'])
+            return "OK"
+    try:
+        if jdata['MessageAttributes']['X-Github-Event']['Value'] == 'push':
+	    source = msg['repository']['url']
+            name = msg['repository']['name']
+	    source_revision = msg['after']
+            if build(source, name, source_revision) == 0:
+                image = '944159926332.dkr.ecr.eu-west-1.amazonaws.com/event-based-cd-example:latest'
+	        built_image_msg = create_msg('ok', image, source, source_revision)
+                sns_client.publish(TopicArn=sns_topic_arn, Subject='built_image', MessageStructure='string', Message=json.dumps(built_image_msg))
+                return "OK"
+    except Exception as e:
+        print e
+	       
 
     print 'Received event, no handling rules. Message data is: \n' + request.data
 
     return "OK"
+
+def build(source, name,  source_revision):
+    print 'building image'
+    return subprocess.call(['./build.sh', source, name,  source_revision])
 
 
 def deploy_and_test(image, src, rev):
@@ -77,7 +98,8 @@ def deploy_container(env, image):
     else:
         port = '8080'
     print 'Start container for env: ' + env
-    return subprocess.call(["docker", "run", "-d", "-p", port + ":5000", "--name", "event-based-cd-example-"+env.lower(), "-e", "PROVIDER="+env, image])
+    deployed_time = str(datetime.datetime.now())
+    return subprocess.call(["docker", "run", "-d", "-p", port + ":5000", "--name", "event-based-cd-example-"+env.lower(), "-e", "ENV="+env, "-e", "DEPLOYED_TIME=UTC "+deployed_time,  image])
 
 
 def create_msg(status, image, src, rev):
