@@ -20,6 +20,7 @@ SCHEDULER.every '3s' do
     source = json['source'].sub(/http:\/\/github.com/, '')
     rev = json['source_revision'][0..6]
     image = json['image'][/.*\/(.*:.*)/, 1]
+    image = '' if image.nil?
     events.push( {
       label: json['event'] + ': ' + source + ' ' + rev + ' ' + image,
       value: json['status'] + ': ' + json['msg'] + ' ' + json['link'] + ' ' + json['date']
