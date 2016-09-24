@@ -17,9 +17,12 @@ SCHEDULER.every '3s' do
     json = JSON.parse(response)
     json.default  = ''
     #print "json: #{id}: #{json}\n"
+    source = json['source'].sub(/http:\/\/github.com/, '')
+    rev = json['source_revision'][0..6]
+    image = json['image'][/.*\/(.*:.*)/, 1]
     events.push( {
-      label: json['event'] + ' - ' + json['source'] + ' ' + json['source_revision'] + ' ' + json['image'],
-      value: json['status'] + ' - ' + json['msg'] + ' ' + json['link'] + ' ' + json['date']
+      label: json['event'] + ': ' + source + ' ' + rev + ' ' + image,
+      value: json['status'] + ': ' + json['msg'] + ' ' + json['link'] + ' ' + json['date']
     } )
   }
   #print "#{events}\n"
